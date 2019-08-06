@@ -14,10 +14,7 @@ namespace Gallag
             while (true)
             {
                 Draw();
-
-                Thread InputThread = new Thread(dot.Move);
-                InputThread.IsBackground = true;
-                InputThread.Start();
+                dot.Move();
 
                 Thread.Sleep(30);
             }
