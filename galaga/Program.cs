@@ -1,13 +1,19 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
+using System.Buffers;
 
 namespace Gallag
 {
     class Program
     {
+        static public int roomWidth = 40;
+        static public int roomHeight = 30;
+
         static void Main(string[] args)
         {
-            Console.SetWindowSize(40, 30);
+            Console.SetWindowSize(roomWidth, roomHeight);
+            Console.SetBufferSize(roomWidth, roomHeight);
             Console.CursorVisible = false;
 
             Player player = new Player();
@@ -18,15 +24,15 @@ namespace Gallag
 
             while (true)
             {
+                Console.Clear();
+
                 Draw();
 
-                Thread.Sleep(30);
+                Thread.Sleep(20);
             }
 
             void Draw()
             {
-                Console.Clear();
-
                 (int x, int y) postion = player.GetPostion();
                 Console.SetCursorPosition(postion.x , postion.y);
                 Console.Write(player.GetShape());
@@ -88,6 +94,31 @@ namespace Gallag
                 else if (keys.Key == ConsoleKey.DownArrow)
                     Moving(Movement.Down);
             }
+        }
+    }
+
+    class Monster : Dot
+    {
+        public Monster ()
+        {
+            Shape = "★";
+            Position.X = 0;
+            Position.Y = 0;
+        }
+
+        public void RanMoving()
+        {
+            Random rn = new Random();
+            int i = rn.Next(0, 5);
+
+            if (i == 1)
+                Moving(Movement.Down);
+            else if (i == 2)
+                Moving(Movement.Left);
+            else if (i == 3)
+                Moving(Movement.Right);
+            else if (i == 4)
+                Moving(Movement.Up);
         }
     }
 }
