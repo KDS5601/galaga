@@ -5,8 +5,9 @@ using System.Buffers;
 
 namespace Gallag
 {
-    class Program
+    static class Program
     {
+        static public int FrameTime = 20;
         static public int roomWidth = 40;
         static public int roomHeight = 30;
 
@@ -28,7 +29,7 @@ namespace Gallag
 
                 Draw();
 
-                Thread.Sleep(20);
+                Thread.Sleep(FrameTime);
             }
 
             void Draw()
@@ -130,14 +131,14 @@ namespace Gallag
             Position = player_r.GetPostion();
         }
 
-        public void Shooting ()
+        public void Moving()
         {
             for (; ; )
             {
-                Moving(Movement.Up);
-                
-                if (Position.Y == 0)
+                if (--Position.Y == 0)
                     break;
+
+                Thread.Sleep(Program.FrameTime);
             }
         }
     }
