@@ -121,4 +121,24 @@ namespace Gallag
                 Moving(Movement.Up);
         }
     }
+
+    class Bullet : Dot
+    {
+        public Bullet (ref Player player_r)
+        {
+            Shape = "·";
+            Position = player_r.GetPostion();
+        }
+
+        public void Shooting ()
+        {
+            for (; ; )
+            {
+                Moving(Movement.Up);
+                
+                if (Position.Y == 0)
+                    break;
+            }
+        }
+    }
 }
