@@ -9,16 +9,16 @@ namespace Gallag
     static class Program
     {
         static public int FrameTime = 20;
-        static public int roomWidth = 40;
-        static public int roomHeight = 30;
+        static public int rootWidth = 40;
+        static public int rootHeight = 30;
 
         static List<Bullet> bulletList;
         static List<Monster> monsterList;
 
         static void Main(string[] args)
         {
-            Console.SetWindowSize(roomWidth, roomHeight);
-            Console.SetBufferSize(roomWidth, roomHeight);
+            Console.SetWindowSize(rootWidth, rootHeight);
+            Console.SetBufferSize(rootWidth, rootHeight);
             Console.CursorVisible = false;
 
             Player player = new Player();
@@ -28,18 +28,18 @@ namespace Gallag
 
             Thread InputThread = new Thread(player.KeyInput);
             InputThread.Start();
-            InputThread.IsBackground = true;
+            InputThread.IsBackground = false;
 
             while (true)
             {
                 Console.Clear();
 
-                Draw();
+                Drawing();
 
                 Thread.Sleep(FrameTime);
             }
 
-            void Draw()
+            void Drawing()
             {
                 (int x, int y) postion = player.GetPostion();
                 Console.SetCursorPosition(postion.x, postion.y);
@@ -49,8 +49,23 @@ namespace Gallag
                 {
                     postion = monster.GetPostion();
                     Console.SetCursorPosition(postion.x, postion.y);
-                    Console.Write(player.GetShape());
+                    Console.Write(monster.GetShape());
                 }
+
+                List<Bullet> toRemove = new List<Bullet>();
+                for (int i = 0; i < bulletList.Count; i++)
+                {
+                    postion = bulletList[i].GetPostion();
+                    Console.SetCursorPosition(postion.x, postion.y);
+                    Console.Write(bulletList[i].GetShape());
+
+                    //총알 삭제용 --> 코드 위치 이전예정
+                    if (bulletList[i].GetPostion().y == 0)
+                        toRemove.Add(bulletList[i]);
+                }
+                bulletList.RemoveAll(toRemove.Contains);
+
+                GC.Collect();                
             }
         }
 
@@ -90,8 +105,8 @@ namespace Gallag
             public Player()
             {
                 Shape = "-ㅅ-";
-                Position.X = roomWidth/2;
-                Position.Y = 2*roomHeight/3;
+                Position.X = rootWidth / 2;
+                Position.Y = 2 * rootHeight / 3;
             }
 
             public void KeyInput()
@@ -146,6 +161,10 @@ namespace Gallag
                 Shape = "·";
                 Position.X = position_r.X + 1;
                 Position.Y = position_r.Y;
+
+                Thread shootingTr = new Thread(Moving);
+                shootingTr.Start();
+                shootingTr.IsBackground = false;
             }
 
             public void Moving()
