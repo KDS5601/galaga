@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Buffers;
+using System.Collections.Generic;
 
 namespace Gallag
 {
@@ -11,6 +12,9 @@ namespace Gallag
         static public int roomWidth = 40;
         static public int roomHeight = 30;
 
+        static List<Bullet> bulletList;
+        static List<Monster> monsterList;
+
         static void Main(string[] args)
         {
             Console.SetWindowSize(roomWidth, roomHeight);
@@ -18,6 +22,9 @@ namespace Gallag
             Console.CursorVisible = false;
 
             Player player = new Player();
+            bulletList = new List<Bullet>();
+            monsterList = new List<Monster>();
+
 
             Thread InputThread = new Thread(player.KeyInput);
             InputThread.Start();
@@ -35,110 +42,121 @@ namespace Gallag
             void Draw()
             {
                 (int x, int y) postion = player.GetPostion();
-                Console.SetCursorPosition(postion.x , postion.y);
+                Console.SetCursorPosition(postion.x, postion.y);
                 Console.Write(player.GetShape());
+
+                foreach (Monster monster in monsterList)
+                {
+                    postion = monster.GetPostion();
+                    Console.SetCursorPosition(postion.x, postion.y);
+                    Console.Write(player.GetShape());
+                }
             }
         }
-    }
 
-    abstract class Dot
-    {
-        protected enum Movement { Up, Down, Left, Right}
 
-        protected (int X, int Y) Position;
-        protected string Shape;
-
-        public (int x, int y) GetPostion ()
+        abstract class Dot
         {
-            return Position;
-        }
+            protected enum Movement { Up, Down, Left, Right }
 
-        public string GetShape()
-        {
-            return Shape;
-        }
+            protected (int X, int Y) Position;
+            protected string Shape;
 
-        protected void Moving (Movement movement)
-        {
-            if (movement == Movement.Right)
-                Position.X++;
-            else if (movement == Movement.Left && Position.X > 0)
-                Position.X--;
-            else if (movement == Movement.Up && Position.Y > 0)
-                Position.Y--;
-            else if (movement == Movement.Down)
-                Position.Y++;
-        }
-    }
-
-    class Player : Dot
-    {
-        public Player()
-        {
-            Shape = "-ㅅ-";
-            Position.X = 0;
-            Position.Y = 0;
-        }
-
-        public void KeyInput()
-        {
-            for (; ; )
+            public (int x, int y) GetPostion()
             {
-                ConsoleKeyInfo keys = Console.ReadKey(true);
+                return Position;
+            }
 
-                if (keys.Key == ConsoleKey.RightArrow)
-                    Moving(Movement.Right);
-                else if (keys.Key == ConsoleKey.LeftArrow)
-                    Moving(Movement.Left);
-                else if (keys.Key == ConsoleKey.UpArrow)
-                    Moving(Movement.Up);
-                else if (keys.Key == ConsoleKey.DownArrow)
+            public string GetShape()
+            {
+                return Shape;
+            }
+
+            protected void Moving(Movement movement)
+            {
+                if (movement == Movement.Right)
+                    Position.X++;
+                else if (movement == Movement.Left && Position.X > 0)
+                    Position.X--;
+                else if (movement == Movement.Up && Position.Y > 0)
+                    Position.Y--;
+                else if (movement == Movement.Down)
+                    Position.Y++;
+            }
+        }
+
+        class Player : Dot
+        {
+            public Player()
+            {
+                Shape = "-ㅅ-";
+                Position.X = roomWidth/2;
+                Position.Y = 2*roomHeight/3;
+            }
+
+            public void KeyInput()
+            {
+                for (; ; )
+                {
+                    ConsoleKeyInfo keys = Console.ReadKey(true);
+
+                    if (keys.Key == ConsoleKey.RightArrow)
+                        Moving(Movement.Right);
+                    else if (keys.Key == ConsoleKey.LeftArrow)
+                        Moving(Movement.Left);
+                    else if (keys.Key == ConsoleKey.UpArrow)
+                        Moving(Movement.Up);
+                    else if (keys.Key == ConsoleKey.DownArrow)
+                        Moving(Movement.Down);
+                    else if (keys.Key == ConsoleKey.Spacebar)
+                        bulletList.Add(new Bullet(this.Position));
+                }
+            }
+        }
+
+        class Monster : Dot
+        {
+            public Monster()
+            {
+                Shape = "★";
+                Position.X = 0;
+                Position.Y = 0;
+            }
+
+            public void RanMoving()
+            {
+                Random rn = new Random();
+                int i = rn.Next(0, 5);
+
+                if (i == 1)
                     Moving(Movement.Down);
+                else if (i == 2)
+                    Moving(Movement.Left);
+                else if (i == 3)
+                    Moving(Movement.Right);
+                else if (i == 4)
+                    Moving(Movement.Up);
             }
         }
-    }
 
-    class Monster : Dot
-    {
-        public Monster ()
+        class Bullet : Dot
         {
-            Shape = "★";
-            Position.X = 0;
-            Position.Y = 0;
-        }
-
-        public void RanMoving()
-        {
-            Random rn = new Random();
-            int i = rn.Next(0, 5);
-
-            if (i == 1)
-                Moving(Movement.Down);
-            else if (i == 2)
-                Moving(Movement.Left);
-            else if (i == 3)
-                Moving(Movement.Right);
-            else if (i == 4)
-                Moving(Movement.Up);
-        }
-    }
-
-    class Bullet : Dot
-    {
-        public Bullet (ref Player player_r)
-        {
-            Shape = "·";
-            Position = player_r.GetPostion();
-        }
-
-        public void Moving()
-        {
-            for (; ; )
+            public Bullet((int X, int Y) position_r)
             {
-                if (--Position.Y == 0)
-                    break;
+                Shape = "·";
+                Position.X = position_r.X + 1;
+                Position.Y = position_r.Y;
+            }
 
-                Thread.Sleep(Program.FrameTime);
+            public void Moving()
+            {
+                for (; ; )
+                {
+                    if (--Position.Y == 0)
+                        break;
+
+                    Thread.Sleep(Program.FrameTime);
+                }
             }
         }
     }
