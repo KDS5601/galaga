@@ -12,13 +12,15 @@ namespace Gallag
         static public int rootWidth = 40;
         static public int rootHeight = 30;
 
+        static public bool gameON = true; 
+
         static List<Bullet> bulletList;
         static List<Monster> monsterList;
 
         static void Main(string[] args)
         {
             Console.SetWindowSize(rootWidth, rootHeight);
-            Console.SetBufferSize(rootWidth, rootHeight);
+            Console.SetBufferSize(rootWidth + 5, rootHeight + 5);
             Console.CursorVisible = false;
 
             Player player = new Player();
@@ -30,14 +32,17 @@ namespace Gallag
             InputThread.Start();
             InputThread.IsBackground = false;
 
-            while (true)
+            while (gameON)
             {
                 Console.Clear();
-
+                ChackPhysics();
                 Drawing();
 
                 Thread.Sleep(FrameTime);
             }
+
+            Console.SetCursorPosition(rootWidth / 2 - 2, rootHeight / 2);
+            Console.WriteLine("게임오버");
 
             void Drawing()
             {
@@ -52,20 +57,57 @@ namespace Gallag
                     Console.Write(monster.GetShape());
                 }
 
-                List<Bullet> toRemove = new List<Bullet>();
                 for (int i = 0; i < bulletList.Count; i++)
                 {
                     postion = bulletList[i].GetPostion();
                     Console.SetCursorPosition(postion.x, postion.y);
                     Console.Write(bulletList[i].GetShape());
-
-                    //총알 삭제용 --> 코드 위치 이전예정
-                    if (bulletList[i].GetPostion().y == 0)
-                        toRemove.Add(bulletList[i]);
                 }
-                bulletList.RemoveAll(toRemove.Contains);
+            }
 
-                GC.Collect();                
+            void ChackPhysics()
+            {
+                List<Bullet> toRemoveBull = new List<Bullet>();
+                List<Monster> toRemoveMonster = new List<Monster>();
+
+                //몬스터와 플레이어 충돌
+                foreach (Monster monster in monsterList)
+                {
+                    if (player.GetPostion() == monster.GetPostion())
+                    {
+                        gameON = false;
+                        return;
+                    }
+                }
+
+                //총알과 충돌
+                for (int i = 0; i < bulletList.Count; i++)
+                    for (int j = 0; j < monsterList.Count; j++)
+                    {
+                        if (bulletList[i].GetPostion() == monsterList[j].GetPostion())
+                        {
+                            toRemoveBull.Add(bulletList[i]);
+                            toRemoveMonster.Add(monsterList[j]);
+                        }
+                    }
+
+                bulletList.RemoveAll(toRemoveBull.Contains);
+                monsterList.RemoveAll(toRemoveMonster.Contains);
+
+                toRemoveBull.Clear();
+                toRemoveMonster.Clear();
+
+                //총알 삭제
+                foreach (Bullet Bullet in bulletList)
+                {
+                    if (Bullet.GetPostion().y == 0)
+                        toRemoveBull.Add(Bullet);
+                }
+                bulletList.RemoveAll(toRemoveBull.Contains);
+
+                toRemoveBull.Clear();
+
+                GC.Collect();
             }
         }
 
@@ -89,13 +131,13 @@ namespace Gallag
 
             protected void Moving(Movement movement)
             {
-                if (movement == Movement.Right)
+                if (movement == Movement.Right & Position.X < rootWidth)
                     Position.X++;
-                else if (movement == Movement.Left && Position.X > 0)
+                else if (movement == Movement.Left & Position.X > 0)
                     Position.X--;
-                else if (movement == Movement.Up && Position.Y > 0)
+                else if (movement == Movement.Up & Position.Y > 0)
                     Position.Y--;
-                else if (movement == Movement.Down)
+                else if (movement == Movement.Down & Position.Y < rootHeight)
                     Position.Y++;
             }
         }
