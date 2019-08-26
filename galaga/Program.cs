@@ -9,10 +9,12 @@ namespace Gallag
     static class Program
     {
         static public int FrameTime = 20;
+        static public int MonsterDefurtTime = 2000;
+
         static public int rootWidth = 40;
         static public int rootHeight = 30;
 
-        static public bool gameON = true; 
+        static public bool gameON = true;
 
         static List<Bullet> bulletList;
         static List<Monster> monsterList;
@@ -20,7 +22,7 @@ namespace Gallag
         static void Main(string[] args)
         {
             Console.SetWindowSize(rootWidth, rootHeight);
-            Console.SetBufferSize(rootWidth + 5, rootHeight + 5);
+            Console.SetBufferSize(rootWidth, rootHeight);
             Console.CursorVisible = false;
 
             Player player = new Player();
@@ -32,16 +34,22 @@ namespace Gallag
             InputThread.Start();
             InputThread.IsBackground = false;
 
+            Thread monsterThread = new Thread(makeMonster);
+            monsterThread.Start();
+            monsterThread.IsBackground = false;
+
             while (gameON)
             {
-                Console.Clear();
                 ChackPhysics();
+
+                Console.Clear();
                 Drawing();
 
                 Thread.Sleep(FrameTime);
             }
 
-            Console.SetCursorPosition(rootWidth / 2 - 2, rootHeight / 2);
+            Console.Clear();
+            Console.SetCursorPosition(rootWidth / 2 - 3, rootHeight / 2);
             Console.WriteLine("게임오버");
 
             void Drawing()
@@ -50,11 +58,11 @@ namespace Gallag
                 Console.SetCursorPosition(postion.x, postion.y);
                 Console.Write(player.GetShape());
 
-                foreach (Monster monster in monsterList)
+                for (int i = 0; i < monsterList.Count; i++)
                 {
-                    postion = monster.GetPostion();
+                    postion = monsterList[i].GetPostion();
                     Console.SetCursorPosition(postion.x, postion.y);
-                    Console.Write(monster.GetShape());
+                    Console.Write(monsterList[i].GetShape());
                 }
 
                 for (int i = 0; i < bulletList.Count; i++)
@@ -73,11 +81,12 @@ namespace Gallag
                 //몬스터와 플레이어 충돌
                 foreach (Monster monster in monsterList)
                 {
-                    if (player.GetPostion() == monster.GetPostion())
-                    {
-                        gameON = false;
-                        return;
-                    }
+                    if (monster.GetPostion().x - player.GetPostion().x >= 0 & monster.GetPostion().x - player.GetPostion().x <= 2)
+                        if (monster.GetPostion().y == player.GetPostion().y)
+                        {
+                            gameON = false;
+                            return;
+                        }
                 }
 
                 //총알과 충돌
@@ -109,6 +118,17 @@ namespace Gallag
 
                 GC.Collect();
             }
+
+            void makeMonster ()
+            {
+                while(gameON)
+                {
+                    monsterList.Add(new Monster());
+
+                    Random rn = new Random();
+                    Thread.Sleep(MonsterDefurtTime * rn.Next(1, 5));
+                }
+            }
         }
 
 
@@ -131,13 +151,13 @@ namespace Gallag
 
             protected void Moving(Movement movement)
             {
-                if (movement == Movement.Right & Position.X < rootWidth)
+                if (movement == Movement.Right & Position.X < rootWidth - 1)
                     Position.X++;
                 else if (movement == Movement.Left & Position.X > 0)
                     Position.X--;
                 else if (movement == Movement.Up & Position.Y > 0)
                     Position.Y--;
-                else if (movement == Movement.Down & Position.Y < rootHeight)
+                else if (movement == Movement.Down & Position.Y < rootHeight - 1)
                     Position.Y++;
             }
         }
@@ -153,11 +173,11 @@ namespace Gallag
 
             public void KeyInput()
             {
-                for (; ; )
+                while(gameON)
                 {
                     ConsoleKeyInfo keys = Console.ReadKey(true);
 
-                    if (keys.Key == ConsoleKey.RightArrow)
+                    if (keys.Key == ConsoleKey.RightArrow & Position.X < rootWidth - 4)
                         Moving(Movement.Right);
                     else if (keys.Key == ConsoleKey.LeftArrow)
                         Moving(Movement.Left);
@@ -175,24 +195,36 @@ namespace Gallag
         {
             public Monster()
             {
+                Random rn = new Random();
+                int i = rn.Next(0, rootWidth - 1);
+
                 Shape = "★";
-                Position.X = 0;
+                Position.X = i;
                 Position.Y = 0;
+
+                Thread movingMonsterTh = new Thread(RanMoving);
+                movingMonsterTh.Start();
+                movingMonsterTh.IsBackground = false;
             }
 
             public void RanMoving()
             {
-                Random rn = new Random();
-                int i = rn.Next(0, 5);
+                while (gameON)
+                {
+                    Random rn = new Random();
+                    int i = rn.Next(0, 5);
 
-                if (i == 1)
-                    Moving(Movement.Down);
-                else if (i == 2)
-                    Moving(Movement.Left);
-                else if (i == 3)
-                    Moving(Movement.Right);
-                else if (i == 4)
-                    Moving(Movement.Up);
+                    if (i == 1)
+                        Moving(Movement.Down);
+                    else if (i == 2)
+                        Moving(Movement.Left);
+                    else if (i == 3)
+                        Moving(Movement.Right);
+                    else if (i == 4)
+                        Moving(Movement.Up);
+
+                    Thread.Sleep(FrameTime);
+                }
             }
         }
 

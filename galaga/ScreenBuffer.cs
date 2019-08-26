@@ -8,7 +8,20 @@ namespace Gallag
 {
     public class ScreenBuffer
     {
-        //별도 구현 예정
+        public ScreenBuffer()
+        {
+
+        }
+
+        public void Push()
+        {
+
+        }
+
+        public void Paint()
+        {
+
+        }
     }
 }
 
