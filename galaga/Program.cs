@@ -25,10 +25,11 @@ namespace Gallag
             Console.SetBufferSize(rootWidth, rootHeight);
             Console.CursorVisible = false;
 
+            ScreenBuffer screenBuffer = new ScreenBuffer(rootHeight, rootWidth);
+
             Player player = new Player();
             bulletList = new List<Bullet>();
             monsterList = new List<Monster>();
-
 
             Thread InputThread = new Thread(player.KeyInput);
             InputThread.Start();
@@ -42,7 +43,6 @@ namespace Gallag
             {
                 ChackPhysics();
 
-                Console.Clear();
                 Drawing();
 
                 Thread.Sleep(FrameTime);
@@ -55,22 +55,32 @@ namespace Gallag
             void Drawing()
             {
                 (int x, int y) postion = player.GetPostion();
-                Console.SetCursorPosition(postion.x, postion.y);
-                Console.Write(player.GetShape());
+                //Console.SetCursorPosition(postion.x, postion.y);
+                //Console.Write(player.GetShape());
+
+                string tempString = player.GetShape();
+
+                for (int i = 0; i < tempString.Length; i++)
+                    screenBuffer.Push(postion.x++, postion.y, tempString[i]);
 
                 for (int i = 0; i < monsterList.Count; i++)
                 {
                     postion = monsterList[i].GetPostion();
-                    Console.SetCursorPosition(postion.x, postion.y);
-                    Console.Write(monsterList[i].GetShape());
+                    //Console.SetCursorPosition(postion.x, postion.y);
+                    //Console.Write(monsterList[i].GetShape());
+                    screenBuffer.Push(postion.x, postion.y, monsterList[i].GetShape()[0]);
+
                 }
 
                 for (int i = 0; i < bulletList.Count; i++)
                 {
                     postion = bulletList[i].GetPostion();
-                    Console.SetCursorPosition(postion.x, postion.y);
-                    Console.Write(bulletList[i].GetShape());
+                    //Console.SetCursorPosition(postion.x, postion.y);
+                    //Console.Write(bulletList[i].GetShape());
+                    screenBuffer.Push(postion.x, postion.y, bulletList[i].GetShape()[0]);
                 }
+
+                screenBuffer.Paint();
             }
 
             void ChackPhysics()
