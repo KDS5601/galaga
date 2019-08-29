@@ -25,7 +25,7 @@ namespace Gallag
             Console.SetBufferSize(rootWidth, rootHeight);
             Console.CursorVisible = false;
 
-            ScreenBuffer screenBuffer = new ScreenBuffer(rootHeight, rootWidth);
+            ScreenBuffer screenBuffer = new ScreenBuffer();
 
             Player player = new Player();
             bulletList = new List<Bullet>();
